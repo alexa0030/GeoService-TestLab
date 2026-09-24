@@ -26,7 +26,7 @@ jobs:
           cache: pip
       - run: pip install -r requirements.txt
       - run: docker compose up -d
-      - run: python scripts/wait_for_services.py
+      - run: PYTHONPATH=. python scripts/wait_for_services.py
       - run: RUN_INTEGRATION=1 pytest -v --junitxml=reports/pytest/junit.xml
       - if: always()
         run: docker compose logs
@@ -37,4 +37,3 @@ jobs:
           path: reports/pytest/
       - if: always()
         run: docker compose down -v
-
