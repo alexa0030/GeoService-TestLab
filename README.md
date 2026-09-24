@@ -12,6 +12,7 @@ regression testing, performance measurement and CI.
 
 The scaled-data track uses openly licensed central-Shanghai OpenStreetMap
 buildings, roads and amenity POIs. See [data source and attribution](docs/data_source.md).
+For the problem-to-result narrative, see the Chinese [project story](docs/project_story.md).
 
 ```text
                  pytest / JMeter
