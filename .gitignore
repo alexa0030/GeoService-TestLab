@@ -8,3 +8,4 @@ reports/jmeter/*.csv
 reports/jmeter/*.jtl
 reports/figures/*.png
 analysis/summary.csv
+GitHub CLI/
