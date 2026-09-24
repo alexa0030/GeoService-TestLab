@@ -44,28 +44,27 @@ def query_osm(bbox: str, timeout: int = 150) -> dict:
         "User-Agent": "GeoService-TestLab/1.0 (+https://github.com/alexa0030/GeoService-TestLab)"
     }
     for tile_number, tile_bbox in enumerate(split_bbox(bbox)):
-        for selector_number, selector in enumerate(selectors):
-            query = f"[out:json][timeout:120];{selector}({tile_bbox});out tags geom;"
-            errors = []
-            start = (tile_number + selector_number) % len(OVERPASS_ENDPOINTS)
-            endpoints = OVERPASS_ENDPOINTS[start:] + OVERPASS_ENDPOINTS[:start]
-            for endpoint in endpoints:
-                try:
-                    response = requests.get(
-                        endpoint, params={"data": query}, headers=headers, timeout=timeout,
-                    )
-                    response.raise_for_status()
-                    for element in response.json().get("elements", []):
-                        elements[(element["type"], int(element["id"]))] = element
-                    time.sleep(0.25)
-                    break
-                except (requests.RequestException, ValueError) as error:
-                    errors.append(f"{endpoint}: {error}")
-            else:
-                raise RuntimeError(
-                    f"All Overpass endpoints failed for {selector} in {tile_bbox}: "
-                    + " | ".join(errors)
+        statements = "".join(f"{selector}({tile_bbox});" for selector in selectors)
+        query = f"[out:json][timeout:120];({statements});out tags geom;"
+        errors = []
+        start = tile_number % len(OVERPASS_ENDPOINTS)
+        endpoints = OVERPASS_ENDPOINTS[start:] + OVERPASS_ENDPOINTS[:start]
+        for endpoint in endpoints:
+            try:
+                response = requests.get(
+                    endpoint, params={"data": query}, headers=headers, timeout=timeout,
                 )
+                response.raise_for_status()
+                for element in response.json().get("elements", []):
+                    elements[(element["type"], int(element["id"]))] = element
+                time.sleep(0.5)
+                break
+            except (requests.RequestException, ValueError) as error:
+                errors.append(f"{endpoint}: {error}")
+        else:
+            raise RuntimeError(
+                f"All Overpass endpoints failed for tile {tile_bbox}: " + " | ".join(errors)
+            )
     return {"elements": list(elements.values())}
 
 
