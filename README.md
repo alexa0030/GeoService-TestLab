@@ -76,7 +76,26 @@ Python analyzer reads real JMeter JTL/CSV output and creates:
 - `reports/figures/latency_vs_concurrency.png`;
 - `reports/figures/throughput_vs_concurrency.png`.
 
-No benchmark number is committed until it has been measured on a real host.
+The committed [benchmark summary](reports/benchmark_summary.csv) comes from a
+successful GitHub-hosted Ubuntu runner execution of Apache JMeter 5.6.3.
+
+| Scenario (50 users) | Martin P95 | pg_tileserv P95 | Martin req/s | pg_tileserv req/s |
+|---|---:|---:|---:|---:|
+| Multi tile, z10 | 7 ms | 12 ms | 1,172.33 | 1,124.86 |
+| Single tile, z0 | 6 ms | 10 ms | 1,212.12 | 1,074.11 |
+| Single tile, z6 | 6 ms | 10 ms | 1,176.47 | 1,101.32 |
+| Single tile, z10 | 5 ms | 10 ms | 1,175.09 | 1,076.43 |
+
+Across those four 50-user scenarios, Martin averaged **6.0 ms P95** versus
+**10.5 ms** for pg_tileserv (42.9% lower), and **1,184.0 req/s** versus
+**1,094.18 req/s** (8.2% higher). All **9,760 samples** across the complete
+24-group matrix completed with **0% errors**. These figures describe one small
+dataset on one shared CI runner and are comparative evidence, not universal
+capacity claims.
+
+![P95 latency comparison](docs/images/latency_vs_concurrency.png)
+
+![Throughput comparison](docs/images/throughput_vs_concurrency.png)
 
 ## Current verification status
 
@@ -85,7 +104,8 @@ The verified GitHub Actions run completed both jobs successfully:
 - local/unit selection: **7 passed**;
 - Docker-backed complete suite: **29 passed**;
 - PostGIS, Martin and pg_tileserv: started and queried successfully;
-- JMeter benchmark: not yet executed, so no performance numbers are claimed.
+- JMeter benchmark: **24 groups / 9,760 samples / 0% errors**;
+- performance workflow: completed successfully in 2m15s on GitHub Actions.
 
 GitHub Actions runs both suites on every push and pull request.
 
