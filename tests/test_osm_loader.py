@@ -1,4 +1,11 @@
-from scripts.load_shanghai_osm import classify
+from scripts.load_shanghai_osm import classify, split_bbox
+
+
+def test_split_bbox_creates_complete_grid():
+    tiles = split_bbox("31.18,121.40,31.30,121.56")
+    assert len(tiles) == 16
+    assert tiles[0] == "31.180000,121.400000,31.210000,121.440000"
+    assert tiles[-1] == "31.270000,121.520000,31.300000,121.560000"
 
 
 def test_classify_osm_geometry_layers():

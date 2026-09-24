@@ -12,7 +12,6 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-import psycopg
 import requests
 
 
@@ -26,31 +25,48 @@ DEFAULT_BBOX = "31.18,121.40,31.30,121.56"  # south,west,north,east
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def query_osm(bbox: str, timeout: int = 300) -> dict:
+def split_bbox(bbox: str, divisions: int = 4) -> list[str]:
+    south, west, north, east = map(float, bbox.split(","))
+    latitude_step = (north - south) / divisions
+    longitude_step = (east - west) / divisions
+    return [
+        f"{south + row * latitude_step:.6f},{west + column * longitude_step:.6f},"
+        f"{south + (row + 1) * latitude_step:.6f},{west + (column + 1) * longitude_step:.6f}"
+        for row in range(divisions)
+        for column in range(divisions)
+    ]
+
+
+def query_osm(bbox: str, timeout: int = 150) -> dict:
     selectors = ('way["building"]', 'way["highway"]', 'node["amenity"]')
-    elements = []
+    elements: dict[tuple[str, int], dict] = {}
     headers = {
         "User-Agent": "GeoService-TestLab/1.0 (+https://github.com/alexa0030/GeoService-TestLab)"
     }
-    for selector in selectors:
-        query = f"[out:json][timeout:240];{selector}({bbox});out tags geom;"
-        errors = []
-        for endpoint in OVERPASS_ENDPOINTS:
-            try:
-                response = requests.get(
-                    endpoint, params={"data": query}, headers=headers, timeout=timeout,
+    for tile_number, tile_bbox in enumerate(split_bbox(bbox)):
+        for selector_number, selector in enumerate(selectors):
+            query = f"[out:json][timeout:120];{selector}({tile_bbox});out tags geom;"
+            errors = []
+            start = (tile_number + selector_number) % len(OVERPASS_ENDPOINTS)
+            endpoints = OVERPASS_ENDPOINTS[start:] + OVERPASS_ENDPOINTS[:start]
+            for endpoint in endpoints:
+                try:
+                    response = requests.get(
+                        endpoint, params={"data": query}, headers=headers, timeout=timeout,
+                    )
+                    response.raise_for_status()
+                    for element in response.json().get("elements", []):
+                        elements[(element["type"], int(element["id"]))] = element
+                    time.sleep(0.25)
+                    break
+                except (requests.RequestException, ValueError) as error:
+                    errors.append(f"{endpoint}: {error}")
+            else:
+                raise RuntimeError(
+                    f"All Overpass endpoints failed for {selector} in {tile_bbox}: "
+                    + " | ".join(errors)
                 )
-                response.raise_for_status()
-                elements.extend(response.json().get("elements", []))
-                time.sleep(1)
-                break
-            except (requests.RequestException, ValueError) as error:
-                errors.append(f"{endpoint}: {error}")
-        else:
-            raise RuntimeError(
-                f"All Overpass endpoints failed for {selector}: " + " | ".join(errors)
-            )
-    return {"elements": elements}
+    return {"elements": list(elements.values())}
 
 
 def classify(payload: dict) -> dict[str, list[tuple]]:
@@ -77,6 +93,8 @@ def classify(payload: dict) -> dict[str, list[tuple]]:
 
 
 def load_postgis(layers: dict[str, list[tuple]], dsn: str) -> None:
+    import psycopg
+
     definitions = {
         "buildings": ("building_type", "Polygon"),
         "roads": ("highway_type", "LineString"),
