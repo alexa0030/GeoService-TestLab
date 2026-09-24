@@ -2,6 +2,8 @@
 
 **Automated Testing & Performance Benchmarking for Geospatial Services**
 
+[![test](https://github.com/alexa0030/GeoService-TestLab/actions/workflows/test.yml/badge.svg)](https://github.com/alexa0030/GeoService-TestLab/actions/workflows/test.yml)
+
 Python · pytest · Docker Compose · PostGIS · JMeter · GitHub Actions
 
 GeoService-TestLab is a reproducible test-development demo for vector-tile
@@ -77,10 +79,14 @@ No benchmark number is committed until it has been measured on a real host.
 
 ## Current verification status
 
-The repository separates local unit checks from Docker-backed integration
-checks. Exact test counts and benchmark results should be updated only from
-actual command output. GitHub Actions runs both suites on every push and pull
-request; its badge can be added after the repository URL exists.
+The verified GitHub Actions run completed both jobs successfully:
+
+- local/unit selection: **7 passed**;
+- Docker-backed complete suite: **29 passed**;
+- PostGIS, Martin and pg_tileserv: started and queried successfully;
+- JMeter benchmark: not yet executed, so no performance numbers are claimed.
+
+GitHub Actions runs both suites on every push and pull request.
 
 ## Failure analysis
 
@@ -116,4 +122,3 @@ demo and does not copy the original benchmark implementation.
 ## License
 
 MIT
-
