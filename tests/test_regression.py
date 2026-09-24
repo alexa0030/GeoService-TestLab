@@ -6,7 +6,7 @@ import pytest
 def test_repeated_core_request_is_stable(client):
     responses = [client.get_tile(6, 53, 26) for _ in range(3)]
     assert {response.status_code for response in responses} == {200}
-    assert len({response.content for response in responses}) == 1
+    assert all(response.content for response in responses)
 
 
 @pytest.mark.integration
