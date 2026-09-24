@@ -43,3 +43,12 @@ sequences were observed. Protobuf encoding does not make byte-for-byte equality
 a suitable API contract when logical content can be encoded in a different
 order. The regression check now asserts stable success and non-empty payloads;
 a future semantic comparison can decode MVT features before comparison.
+
+## Public open-data API throttling (observed)
+
+The first Shanghai OSM workflow sent one combined Overpass request. The primary
+endpoint returned HTTP 406 and a fallback returned HTTP 429 from the shared CI
+address. The loader now splits buildings, roads and POIs into separate queries,
+identifies itself with a project User-Agent and rotates across multiple public
+Overpass instances. This reduces server load and makes an external dependency
+failure explicit instead of silently producing a smaller dataset.

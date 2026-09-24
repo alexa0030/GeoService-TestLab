@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -18,30 +19,38 @@ import requests
 OVERPASS_ENDPOINTS = (
     "https://overpass-api.de/api/interpreter",
     "https://overpass.kumi.systems/api/interpreter",
+    "https://overpass.private.coffee/api/interpreter",
+    "https://overpass.nchc.org.tw/api/interpreter",
 )
 DEFAULT_BBOX = "31.18,121.40,31.30,121.56"  # south,west,north,east
 ROOT = Path(__file__).resolve().parents[1]
 
 
 def query_osm(bbox: str, timeout: int = 300) -> dict:
-    query = f"""
-    [out:json][timeout:240];
-    (
-      way["building"]({bbox});
-      way["highway"]({bbox});
-      node["amenity"]({bbox});
-    );
-    out tags geom;
-    """
-    errors = []
-    for endpoint in OVERPASS_ENDPOINTS:
-        try:
-            response = requests.post(endpoint, data={"data": query}, timeout=timeout)
-            response.raise_for_status()
-            return response.json()
-        except (requests.RequestException, ValueError) as error:
-            errors.append(f"{endpoint}: {error}")
-    raise RuntimeError("All Overpass endpoints failed: " + " | ".join(errors))
+    selectors = ('way["building"]', 'way["highway"]', 'node["amenity"]')
+    elements = []
+    headers = {
+        "User-Agent": "GeoService-TestLab/1.0 (+https://github.com/alexa0030/GeoService-TestLab)"
+    }
+    for selector in selectors:
+        query = f"[out:json][timeout:240];{selector}({bbox});out tags geom;"
+        errors = []
+        for endpoint in OVERPASS_ENDPOINTS:
+            try:
+                response = requests.get(
+                    endpoint, params={"data": query}, headers=headers, timeout=timeout,
+                )
+                response.raise_for_status()
+                elements.extend(response.json().get("elements", []))
+                time.sleep(1)
+                break
+            except (requests.RequestException, ValueError) as error:
+                errors.append(f"{endpoint}: {error}")
+        else:
+            raise RuntimeError(
+                f"All Overpass endpoints failed for {selector}: " + " | ".join(errors)
+            )
+    return {"elements": elements}
 
 
 def classify(payload: dict) -> dict[str, list[tuple]]:
@@ -131,4 +140,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
