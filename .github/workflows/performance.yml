@@ -1,0 +1,42 @@
+name: performance
+
+on:
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - run: pip install -r requirements.txt
+      - name: Install Apache JMeter 5.6.3
+        run: |
+          curl --fail --location --retry 3 \
+            https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-5.6.3.tgz \
+            --output /tmp/apache-jmeter.tgz
+          tar -xzf /tmp/apache-jmeter.tgz -C /tmp
+          echo "/tmp/apache-jmeter-5.6.3/bin" >> "$GITHUB_PATH"
+      - run: docker compose up -d
+      - run: PYTHONPATH=. python scripts/wait_for_services.py
+      - name: Run 24-scenario benchmark matrix
+        run: bash scripts/run_performance.sh
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-results
+          path: |
+            reports/jmeter/
+            reports/figures/
+          retention-days: 30
+      - if: always()
+        run: docker compose down -v
+

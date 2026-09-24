@@ -8,7 +8,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 
-NAME = re.compile(r"(?P<server>martin|pg_tileserv)_(?P<concurrency>\d+)")
+NAME = re.compile(
+    r"^(?P<server>martin|pg_tileserv)_(?P<scenario>.+)_(?P<concurrency>\d+)$"
+)
 
 
 def summarize(path: Path) -> dict:
@@ -20,7 +22,7 @@ def summarize(path: Path) -> dict:
     success = frame["success"].astype(str).str.lower().eq("true")
     return {
         "server": match["server"],
-        "scenario": frame["label"].iloc[0],
+        "scenario": match["scenario"],
         "concurrency": int(match["concurrency"]),
         "samples": len(frame),
         "avg_latency_ms": round(frame["elapsed"].mean(), 2),
@@ -35,7 +37,7 @@ def analyze(input_dir: Path, output_dir: Path) -> pd.DataFrame:
     rows = [summarize(path) for path in files if NAME.search(path.stem)]
     if not rows:
         raise FileNotFoundError(f"No named JMeter results found in {input_dir}")
-    result = pd.DataFrame(rows).sort_values(["server", "concurrency"])
+    result = pd.DataFrame(rows).sort_values(["scenario", "server", "concurrency"])
     output_dir.mkdir(parents=True, exist_ok=True)
     result.to_csv(output_dir / "summary.csv", index=False)
     figures = output_dir.parent / "figures"
@@ -45,8 +47,11 @@ def analyze(input_dir: Path, output_dir: Path) -> pd.DataFrame:
         ("throughput_rps", "throughput_vs_concurrency.png", "Throughput (req/s)"),
     ]:
         figure, axis = plt.subplots(figsize=(7, 4))
-        for server, group in result.groupby("server"):
-            axis.plot(group["concurrency"], group[metric], marker="o", label=server)
+        for (server, scenario), group in result.groupby(["server", "scenario"]):
+            axis.plot(
+                group["concurrency"], group[metric], marker="o",
+                label=f"{server} / {scenario}",
+            )
         axis.set(xlabel="Concurrent users", ylabel=ylabel, title=f"{ylabel} vs concurrency")
         axis.grid(alpha=0.3)
         axis.legend()
@@ -62,4 +67,3 @@ if __name__ == "__main__":
     parser.add_argument("--output-dir", type=Path, default=Path("reports/jmeter"))
     args = parser.parse_args()
     print(analyze(args.input_dir, args.output_dir).to_string(index=False))
-

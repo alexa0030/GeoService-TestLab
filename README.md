@@ -68,8 +68,9 @@ With Apache JMeter 5.6.3 installed:
 bash scripts/run_performance.sh
 ```
 
-The plans exercise both services at 1, 10 and 50 concurrent users. The Python
-analyzer reads real JMeter JTL/CSV output and creates:
+The plans execute **24 benchmark groups**: two services × four tile scenarios
+(z0, z6, z10 and four-tile z10) × three concurrency levels (1/10/50). The
+Python analyzer reads real JMeter JTL/CSV output and creates:
 
 - `reports/jmeter/summary.csv` (samples, average, P95, throughput, error rate);
 - `reports/figures/latency_vs_concurrency.png`;
