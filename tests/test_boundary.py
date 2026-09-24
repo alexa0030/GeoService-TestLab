@@ -10,5 +10,5 @@ def test_invalid_coordinates_are_rejected(client, z, x, y):
 @pytest.mark.integration
 def test_high_zoom_behavior_is_explicit(client):
     response = client.get_tile(23, 0, 0)
-    expected = 404 if client.config.name == "martin" else 200
+    expected = 204 if client.config.name == "martin" else 200
     assert response.status_code == expected

@@ -29,6 +29,8 @@ pg_tileserv exposes it as `public.sample_features`. A shared URL assumption
 therefore caused Martin requests to return 404. Service-specific paths are now
 configuration, while the client API stays common.
 
-The same run found that pg_tileserv returns HTTP 200 for `z=23`, whereas Martin
-rejects it with 404. The boundary suite now records this behavior explicitly
-instead of incorrectly assuming both products enforce the same zoom policy.
+Subsequent execution also exposed two response semantics. Martin returns 204
+for an empty tile, while pg_tileserv returns 200 with an empty tile payload;
+the original z6/z10 x coordinates did not cover the Shanghai sample and made
+this visible. The corrected coordinates are x=53 at z6 and x=857 at z10. At
+z=23/x=0/y=0 the suite records the service-specific 204 versus 200 contract.
