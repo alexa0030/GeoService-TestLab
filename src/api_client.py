@@ -32,6 +32,7 @@ class TileClient:
 
     def get_layer(self, layer: str, z: int = 0, x: int = 0, y: int = 0):
         path = self.config.tile_path.replace("public.sample_features", layer)
+        path = path.replace("sample_features", layer)
         return self.session.get(self._url(path.format(z=z, x=x, y=y)), timeout=self.timeout)
 
     def wait_until_ready(self, attempts: int = 10, delay: float = 2) -> bool:
@@ -48,4 +49,3 @@ class TileClient:
 
 def service_config(name: str, raw: dict) -> ServiceConfig:
     return ServiceConfig(name=name, **raw)
-

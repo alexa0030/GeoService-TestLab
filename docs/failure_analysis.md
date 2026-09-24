@@ -20,3 +20,15 @@ runner did not do so for direct script execution. The fix declares
 `pythonpath = .` for pytest and explicitly sets `PYTHONPATH=.` for the service
 readiness script. This turns an environment-dependent assumption into an
 explicit, reproducible setting.
+
+## Cross-service source IDs and high zoom (observed)
+
+The second Actions run started all three containers and executed 29 tests. It
+showed that Martin 1.16 auto-publishes the table as `sample_features`, while
+pg_tileserv exposes it as `public.sample_features`. A shared URL assumption
+therefore caused Martin requests to return 404. Service-specific paths are now
+configuration, while the client API stays common.
+
+The same run found that pg_tileserv returns HTTP 200 for `z=23`, whereas Martin
+rejects it with 404. The boundary suite now records this behavior explicitly
+instead of incorrectly assuming both products enforce the same zoom policy.
