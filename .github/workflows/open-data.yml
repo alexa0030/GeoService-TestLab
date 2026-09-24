@@ -1,0 +1,32 @@
+name: open-data
+
+on:
+  workflow_dispatch:
+
+jobs:
+  load-and-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: docker compose up -d
+      - run: PYTHONPATH=. python scripts/wait_for_services.py
+      - name: Fetch and import Shanghai OSM layers
+        run: python scripts/load_shanghai_osm.py
+      - name: Verify imported row counts
+        run: |
+          docker compose exec -T postgis psql -U geoservice -d geoservice -c \
+            "SELECT 'buildings' layer, count(*) FROM osm_buildings UNION ALL SELECT 'roads', count(*) FROM osm_roads UNION ALL SELECT 'pois', count(*) FROM osm_pois;"
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shanghai-osm-stats
+          path: reports/osm_data_stats.json
+      - if: always()
+        run: docker compose down -v
+

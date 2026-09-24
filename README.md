@@ -10,6 +10,9 @@ GeoService-TestLab is a reproducible test-development demo for vector-tile
 services. It connects an urban–rural spatial-data use case with API automation,
 regression testing, performance measurement and CI.
 
+The scaled-data track uses openly licensed central-Shanghai OpenStreetMap
+buildings, roads and amenity POIs. See [data source and attribution](docs/data_source.md).
+
 ```text
                  pytest / JMeter
                        |
