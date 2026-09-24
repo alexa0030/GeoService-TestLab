@@ -1,0 +1,10 @@
+{
+  "type": "FeatureCollection",
+  "name": "urban_rural_gradient_sample",
+  "features": [
+    {"type":"Feature","properties":{"id":1,"name":"Central Urban","urban_level":"urban"},"geometry":{"type":"Polygon","coordinates":[[[121.35,31.15],[121.55,31.15],[121.55,31.35],[121.35,31.35],[121.35,31.15]]]}},
+    {"type":"Feature","properties":{"id":2,"name":"Urban Fringe","urban_level":"peri-urban"},"geometry":{"type":"Polygon","coordinates":[[[121.55,31.15],[121.75,31.15],[121.75,31.35],[121.55,31.35],[121.55,31.15]]]}},
+    {"type":"Feature","properties":{"id":3,"name":"Rural Sample","urban_level":"rural"},"geometry":{"type":"Polygon","coordinates":[[[121.75,31.15],[121.95,31.15],[121.95,31.35],[121.75,31.35],[121.75,31.15]]]}}
+  ]
+}
+

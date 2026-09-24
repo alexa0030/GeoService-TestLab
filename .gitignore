@@ -1,0 +1,10 @@
+__pycache__/
+.pytest_cache/
+.venv/
+*.pyc
+reports/pytest/*.xml
+reports/jmeter/*.csv
+reports/jmeter/*.jtl
+reports/figures/*.png
+analysis/summary.csv
+

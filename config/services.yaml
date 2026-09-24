@@ -1,0 +1,10 @@
+services:
+  martin:
+    base_url: http://localhost:3000
+    tile_path: /public.sample_features/{z}/{x}/{y}
+    catalog_path: /catalog
+  pg_tileserv:
+    base_url: http://localhost:7800
+    tile_path: /public.sample_features/{z}/{x}/{y}.pbf
+    catalog_path: /index.json
+

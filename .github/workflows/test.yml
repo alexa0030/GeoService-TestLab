@@ -1,0 +1,40 @@
+name: test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: pytest -v -m "not integration"
+
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: docker compose up -d
+      - run: python scripts/wait_for_services.py
+      - run: RUN_INTEGRATION=1 pytest -v --junitxml=reports/pytest/junit.xml
+      - if: always()
+        run: docker compose logs
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-results
+          path: reports/pytest/
+      - if: always()
+        run: docker compose down -v
+

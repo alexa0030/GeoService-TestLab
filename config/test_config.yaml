@@ -1,0 +1,14 @@
+http:
+  timeout_seconds: 10
+  retries: 5
+  retry_delay_seconds: 2
+tiles:
+  valid:
+    - [0, 0, 0]
+    - [6, 52, 26]
+    - [10, 843, 418]
+  invalid:
+    - [-1, 0, 0]
+    - [23, 0, 0]
+    - [6, -1, 26]
+

@@ -1,0 +1,42 @@
+services:
+  postgis:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_DB: geoservice
+      POSTGRES_USER: geoservice
+      POSTGRES_PASSWORD: geoservice
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgis_data:/var/lib/postgresql/data
+      - ./data/init.sql:/docker-entrypoint-initdb.d/10-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U geoservice -d geoservice"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  martin:
+    image: ghcr.io/maplibre/martin:1.16.1
+    command: ["postgresql://geoservice:geoservice@postgis:5432/geoservice"]
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgis:
+        condition: service_healthy
+    restart: on-failure
+
+  pg_tileserv:
+    image: pramsey/pg_tileserv:20250131
+    environment:
+      DATABASE_URL: postgresql://geoservice:geoservice@postgis:5432/geoservice
+    ports:
+      - "7800:7800"
+    depends_on:
+      postgis:
+        condition: service_healthy
+    restart: on-failure
+
+volumes:
+  postgis_data:
+
